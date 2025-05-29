@@ -91,4 +91,4 @@ Mô hình kết hợp đặc trưng từ CafeBERT và đặc trưng từ từ đ
 
 ## Tác giả
 
-Dự án được phát triển theo yêu cầu của người dùng, sử dụng mô hình CafeBERT từ UIT-NLP.
+Bởi Đỗ Huy Trúc trong môn Đồ án cơ sở, sử dụng mô hình CafeBERT từ UIT-NLP và từ điển cảm xúc tiếng Việt EmoLex bởi VnEmoLex và Viet WordNet.
