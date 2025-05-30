@@ -93,6 +93,7 @@ Mô hình kết hợp đặc trưng từ CafeBERT và đặc trưng từ từ đ
 
 Bởi Đỗ Huy Trúc trong môn Đồ án cơ sở, sử dụng mô hình CafeBERT từ UIT-NLP và từ điển cảm xúc tiếng Việt EmoLex bởi VnEmoLex và Viet WordNet.
 
+```bibtex
 @inproceedings{do-etal-2024-vlue,
     title = "{VLUE}: A New Benchmark and Multi-task Knowledge Transfer Learning for {V}ietnamese Natural Language Understanding",
     author = "Do, Phong  and
