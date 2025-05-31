@@ -52,10 +52,11 @@ def evaluate_model(model, dataloader, device, output_dir='results'):
             all_labels.extend(labels.cpu().tolist())
             all_probs.extend(probs.cpu().tolist())
     
-    # Tính các chỉ số đánh giá
-    accuracy = accuracy_score(all_labels, all_preds)
+    # Tính các chỉ số đánh giá (loại bỏ Accuracy vì bộ dữ liệu mất cân bằng)
     macro_f1 = f1_score(all_labels, all_preds, average='macro')
     weighted_f1 = f1_score(all_labels, all_preds, average='weighted')
+    # Tính thêm các chỉ số đánh giá khác
+    class_f1 = f1_score(all_labels, all_preds, average=None)
     
     # Tính ma trận nhầm lẫn
     cm = confusion_matrix(all_labels, all_preds)
@@ -66,10 +67,12 @@ def evaluate_model(model, dataloader, device, output_dir='results'):
     
     # Lưu kết quả đánh giá
     with open(os.path.join(output_dir, 'evaluation_results.txt'), 'w') as f:
-        f.write(f"Accuracy: {accuracy:.4f}\n")
         f.write(f"Macro F1-score: {macro_f1:.4f}\n")
         f.write(f"Weighted F1-score: {weighted_f1:.4f}\n\n")
-        f.write("Báo cáo phân loại chi tiết:\n")
+        f.write("F1-score cho từng lớp:\n")
+        for i, class_name in enumerate(class_names):
+            f.write(f"{class_name}: {class_f1[i]:.4f}\n")
+        f.write("\nBáo cáo phân loại chi tiết:\n")
         f.write(classification_report(all_labels, all_preds, target_names=class_names))
     
     # Lưu báo cáo phân loại dưới dạng JSON
@@ -84,7 +87,7 @@ def evaluate_model(model, dataloader, device, output_dir='results'):
         plot_roc_curves(all_labels, all_probs, class_names, os.path.join(output_dir, 'roc_curves.png'))
         plot_precision_recall_curves(all_labels, all_probs, class_names, os.path.join(output_dir, 'precision_recall_curves.png'))
     
-    return accuracy, macro_f1, weighted_f1, cm, report
+    return macro_f1, weighted_f1, class_f1, cm, report
 
 # Vẽ ma trận nhầm lẫn
 def plot_confusion_matrix(cm, class_names, output_path):
@@ -272,6 +275,12 @@ def main():
     print(f"Đang đọc dữ liệu từ {args.data}...")
     test_df = pd.read_csv(args.data)
     test_df = test_df.dropna()  # Xóa hàng có giá trị NaN
+    
+    # Loại bỏ các mẫu có nhãn 'Other'
+    print(f"Số lượng mẫu trong tập kiểm tra trước khi loại bỏ nhãn 'Other': {len(test_df)}")
+    test_df = test_df[test_df['Emotion'] != 'Other']
+    print(f"Số lượng mẫu trong tập kiểm tra sau khi loại bỏ nhãn 'Other': {len(test_df)}")
+    
     test_df['Sentence'] = test_df['Sentence'].apply(preprocess_text)  # Tiền xử lý văn bản
     
     # Đọc từ điển cảm xúc
@@ -290,7 +299,7 @@ def main():
     
     # Tạo mô hình
     print("Đang khởi tạo mô hình...")
-    model = EmotionClassifier(bert_model, num_classes=MODEL_CONFIG['num_classes'])
+    model = EmotionClassifier(bert_model, num_classes=6)
     model.to(device)
     
     # Tải trọng số mô hình đã huấn luyện
@@ -299,11 +308,14 @@ def main():
     
     # Đánh giá mô hình
     print("Đang đánh giá mô hình...")
-    accuracy, macro_f1, weighted_f1, cm, report = evaluate_model(model, test_dataloader, device, args.output_dir)
+    macro_f1, weighted_f1, class_f1, cm, report = evaluate_model(model, test_dataloader, device, args.output_dir)
     
-    print(f"Accuracy: {accuracy:.4f}")
     print(f"Macro F1-score: {macro_f1:.4f}")
     print(f"Weighted F1-score: {weighted_f1:.4f}")
+    print("\nF1-score cho từng lớp:")
+    class_names = [REVERSE_EMOTION_MAPPING[i] for i in range(len(REVERSE_EMOTION_MAPPING))]
+    for i, class_name in enumerate(class_names):
+        print(f"{class_name}: {class_f1[i]:.4f}")
     
     # Phân tích lỗi nếu được yêu cầu
     if args.analyze_errors:

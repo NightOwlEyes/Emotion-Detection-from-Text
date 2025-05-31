@@ -1,0 +1,5 @@
+Quy trình tiền xử lý văn bản:
+1. Chuẩn hóa văn bản tiếng Việt sử dụng underthesea
+2. Chuyển về chữ thường
+3. Xóa khoảng trắng thừa
+4. Giữ nguyên emoji và ký tự đặc biệt

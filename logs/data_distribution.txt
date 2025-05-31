@@ -1,0 +1,28 @@
+Phân phối dữ liệu:
+Tổng số mẫu huấn luyện: 4527
+Tổng số mẫu kiểm định: 545
+Tổng số mẫu kiểm tra: 564
+
+Phân phối nhãn trong tập huấn luyện:
+Enjoyment: 1558 (34.42%)
+Disgust: 1071 (23.66%)
+Sadness: 947 (20.92%)
+Anger: 391 (8.64%)
+Fear: 318 (7.02%)
+Surprise: 242 (5.35%)
+
+Phân phối nhãn trong tập kiểm định:
+Enjoyment: 214 (39.27%)
+Disgust: 135 (24.77%)
+Sadness: 86 (15.78%)
+Anger: 49 (8.99%)
+Fear: 31 (5.69%)
+Surprise: 30 (5.50%)
+
+Phân phối nhãn trong tập kiểm tra:
+Enjoyment: 193 (34.22%)
+Disgust: 132 (23.40%)
+Sadness: 116 (20.57%)
+Fear: 46 (8.16%)
+Anger: 40 (7.09%)
+Surprise: 37 (6.56%)

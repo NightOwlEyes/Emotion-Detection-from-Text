@@ -63,14 +63,13 @@ Kết quả sẽ được lưu vào một file CSV với tên `[tên_file_gốc]
 
 ## Các loại cảm xúc
 
-Mô hình có thể dự đoán 7 loại cảm xúc:
+Mô hình có thể dự đoán 6 loại cảm xúc cơ bản:
 1. `Anger` (Giận dữ)
 2. `Disgust` (Ghê tởm)
 3. `Fear` (Sợ hãi)
 4. `Enjoyment` (Vui vẻ)
 5. `Sadness` (Buồn bã)
 6. `Surprise` (Ngạc nhiên)
-7. `Other` (Khác)
 
 ## Lưu ý
 

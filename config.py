@@ -24,7 +24,7 @@ TRAINING_CONFIG = {
 MODEL_CONFIG = {
     'bert_model_name': 'uitnlp/CafeBERT',
     'hidden_size': 512,  # Kích thước lớp ẩn
-    'num_classes': 7,  # Số lượng lớp cảm xúc
+    'num_classes': 6,  # Số lượng lớp cảm xúc (đã loại bỏ nhãn Other)
 }
 
 # Cấu hình đường dẫn
@@ -42,8 +42,7 @@ EMOTION_MAPPING = {
     'Fear': 2,
     'Enjoyment': 3,
     'Sadness': 4,
-    'Surprise': 5,
-    'Other': 6
+    'Surprise': 5
 }
 
 # Ánh xạ ngược lại từ số sang nhãn cảm xúc

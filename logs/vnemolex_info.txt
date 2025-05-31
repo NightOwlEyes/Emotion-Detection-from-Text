@@ -1,0 +1,8 @@
+Tổng số từ trong từ điển VnEmoLex: 3272
+Số lượng từ cho mỗi cảm xúc:
+Anger: 719
+Disgust: 925
+Fear: 814
+Enjoyment: 1176
+Sadness: 913
+Surprise: 596

@@ -45,9 +45,9 @@ Thông tin về từ điển cảm xúc VnEmoLex, bao gồm:
 Lịch sử huấn luyện dưới dạng JSON, bao gồm các chỉ số sau cho mỗi epoch:
 - `train_loss`: Mất mát trên tập huấn luyện
 - `val_loss`: Mất mát trên tập kiểm định
-- `val_accuracy`: Độ chính xác trên tập kiểm định
 - `val_macro_f1`: Macro F1-score trên tập kiểm định
 - `val_weighted_f1`: Weighted F1-score trên tập kiểm định
+- `val_class_f1`: F1-score cho từng lớp trên tập kiểm định
 
 ### execution_time.txt
 
@@ -72,11 +72,13 @@ Biểu đồ thể hiện quá trình huấn luyện qua các epoch, bao gồm:
    - Nếu mất mát trên tập huấn luyện giảm nhưng mất mát trên tập kiểm định tăng, có thể mô hình đang bị overfitting
    - Nếu cả hai đều giảm chậm, có thể cần tăng learning rate hoặc số epoch
 
-2. **Độ chính xác qua các epoch**: Thể hiện độ chính xác trên tập kiểm định
-   - Theo dõi xu hướng tăng/giảm để đánh giá quá trình học
-
-3. **F1-score qua các epoch**: So sánh Macro F1 và Weighted F1 trên tập kiểm định
+2. **F1-score qua các epoch**: So sánh Macro F1 và Weighted F1 trên tập kiểm định
    - Macro F1 thấp hơn nhiều so với Weighted F1 có thể cho thấy mô hình hoạt động kém trên các lớp thiểu số
+   - Theo dõi xu hướng tăng/giảm của F1-score để đánh giá quá trình học
+
+3. **F1-score cho từng lớp qua các epoch**: Thể hiện F1-score cho mỗi lớp cảm xúc
+   - Giúp xác định các lớp cụ thể mà mô hình đang gặp khó khăn
+   - Theo dõi sự cải thiện của từng lớp qua quá trình huấn luyện
 
 ### confusion_matrix.png
 
@@ -92,14 +94,17 @@ Ma trận nhầm lẫn thể hiện số lượng mẫu được phân loại đ
 ### evaluation_results.txt
 
 Kết quả đánh giá cuối cùng trên tập kiểm tra, bao gồm:
-- **Accuracy**: Tỷ lệ dự đoán đúng trên tổng số mẫu
 - **Macro F1-score**: Trung bình của F1-score cho mỗi lớp, coi mỗi lớp có tầm quan trọng như nhau
 - **Weighted F1-score**: Trung bình có trọng số của F1-score cho mỗi lớp, trọng số là số lượng mẫu của mỗi lớp
+- **F1-score cho từng lớp**: F1-score riêng biệt cho mỗi loại cảm xúc, giúp đánh giá hiệu suất mô hình trên từng lớp cụ thể
 
 **Cách phân tích**:
-- Accuracy cao cho thấy mô hình dự đoán đúng phần lớn các mẫu
 - Macro F1 thấp hơn nhiều so với Weighted F1 cho thấy mô hình hoạt động kém trên các lớp thiểu số
+- F1-score cho từng lớp giúp xác định chính xác những lớp nào mô hình đang gặp khó khăn
+- Tập trung cải thiện mô hình cho các lớp có F1-score thấp
 - So sánh các chỉ số này với các mô hình khác để đánh giá hiệu suất tương đối
+
+**Lưu ý**: Chúng tôi không sử dụng Accuracy làm thước đo đánh giá vì bộ dữ liệu mất cân bằng, Accuracy có thể cho kết quả thiên lệch và không phản ánh chính xác hiệu suất thực tế của mô hình trên tất cả các lớp.
 
 ## Cải thiện mô hình dựa trên kết quả
 

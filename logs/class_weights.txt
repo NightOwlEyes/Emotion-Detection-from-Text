@@ -1,0 +1,7 @@
+Trọng số cho từng lớp cảm xúc:
+Enjoyment: 0.5087
+Disgust: 0.7400
+Sadness: 0.8369
+Anger: 2.0270
+Fear: 2.4924
+Surprise: 3.2751

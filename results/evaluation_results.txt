@@ -1,0 +1,10 @@
+Macro F1-score: 0.6801
+Weighted F1-score: 0.7119
+
+F1-score cho từng lớp:
+Anger: 0.5161
+Disgust: 0.6232
+Fear: 0.6947
+Enjoyment: 0.7833
+Sadness: 0.7764
+Surprise: 0.6866

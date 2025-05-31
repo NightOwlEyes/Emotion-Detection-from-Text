@@ -4,7 +4,7 @@ from transformers import AutoModel, AutoTokenizer
 import pandas as pd
 import re
 import argparse
-
+import emoji
 # Cấu hình thiết bị
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -13,11 +13,15 @@ MAX_LEN = 128
 
 # Hàm tiền xử lý văn bản
 def preprocess_text(text):
-    # Chuẩn hóa văn bản
-    text = re.sub(r'\s+', ' ', text)  # Xóa khoảng trắng thừa
-    text = text.strip().lower()  # Chuyển về chữ thường
-    
-    return text
+    text = text.strip().lower()                      # Chuyển về chữ thường
+    text = re.sub(r'\s+', ' ', text)                 # Xóa khoảng trắng thừa
+    text = re.sub(r'\d+', '', text)                  # Loại bỏ số
+    # Giữ lại emoji
+    emojis = ''.join(c for c in text if c in emoji.EMOJI_DATA)
+    # Loại ký tự đặc biệt, giữ lại chữ cái, khoảng trắng, dấu câu nhẹ
+    text = re.sub(r'[^\w\s\.,!?]', '', text)
+    # Ghép lại với emoji nếu cần
+    return text.strip() + ' ' + emojis if emojis else text.strip()
 
 # Đọc từ điển cảm xúc VnEmoLex
 def load_vnemolex():
@@ -56,7 +60,7 @@ def extract_lexicon_features(text, emotion_dict):
 
 # Mô hình phân loại cảm xúc
 class EmotionClassifier(nn.Module):
-    def __init__(self, bert_model, num_classes=7):
+    def __init__(self, bert_model, num_classes=6):
         super(EmotionClassifier, self).__init__()
         self.bert = bert_model
         self.dropout = nn.Dropout(0.3)
@@ -129,28 +133,80 @@ def predict_emotion(text, model, tokenizer, emotion_dict):
         2: 'Fear',
         3: 'Enjoyment',
         4: 'Sadness',
-        5: 'Surprise',
-        6: 'Other'
+        5: 'Surprise'
     }
     
     # Lấy xác suất cho mỗi cảm xúc
     probabilities = torch.nn.functional.softmax(outputs, dim=1)
-    probs_dict = {emotion_map[i]: float(probabilities[0][i]) for i in range(7)}
+    probs_dict = {emotion_map[i]: float(probabilities[0][i]) for i in range(6)}
     
     return emotion_map[preds.item()], probs_dict
+
+# Hàm tương tác với người dùng
+def get_user_input():
+    print("\nChọn phương thức nhập dữ liệu:")
+    print("1. Nhập văn bản trực tiếp")
+    print("2. Nhập đường dẫn đến file văn bản")
+    print("3. Thoát")
+    
+    choice = input("Nhập lựa chọn của bạn (1-3): ")
+    
+    if choice == '1':
+        text = input("\nNhập văn bản cần dự đoán cảm xúc: ")
+        return {'type': 'text', 'content': text}
+    elif choice == '2':
+        file_path = input("\nNhập đường dẫn đến file văn bản: ")
+        return {'type': 'file', 'content': file_path}
+    elif choice == '3':
+        return {'type': 'exit'}
+    else:
+        print("Lựa chọn không hợp lệ. Vui lòng chọn lại.")
+        return get_user_input()
+
+# Hàm xử lý dự đoán cho văn bản
+def process_text(text, model, tokenizer, emotion_dict):
+    emotion, probs = predict_emotion(text, model, tokenizer, emotion_dict)
+    print(f"\nVăn bản: {text}")
+    print(f"Cảm xúc dự đoán: {emotion}")
+    print("\nXác suất cho mỗi cảm xúc:")
+    for emotion, prob in sorted(probs.items(), key=lambda x: x[1], reverse=True):
+        print(f"{emotion}: {prob:.4f}")
+
+# Hàm xử lý dự đoán cho file
+def process_file(file_path, model, tokenizer, emotion_dict):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            texts = f.readlines()
+        
+        print(f"\nĐã đọc {len(texts)} dòng từ file {file_path}")
+        
+        results = []
+        for i, text in enumerate(texts):
+            text = text.strip()
+            if text:  # Bỏ qua dòng trống
+                emotion, probs = predict_emotion(text, model, tokenizer, emotion_dict)
+                results.append({
+                    'text': text,
+                    'emotion': emotion,
+                    'probabilities': probs
+                })
+                print(f"Dòng {i+1}: {emotion}")
+        
+        # Lưu kết quả vào file
+        output_file = file_path.rsplit('.', 1)[0] + '_predictions.csv'
+        df = pd.DataFrame(results)
+        df.to_csv(output_file, index=False)
+        print(f"\nĐã lưu kết quả dự đoán vào file {output_file}")
+    
+    except Exception as e:
+        print(f"Lỗi khi đọc file: {e}")
 
 # Hàm chính
 def main():
     # Phân tích tham số dòng lệnh
     parser = argparse.ArgumentParser(description='Dự đoán cảm xúc cho văn bản tiếng Việt')
-    parser.add_argument('--text', type=str, help='Văn bản cần dự đoán cảm xúc')
-    parser.add_argument('--file', type=str, help='Đường dẫn đến file chứa văn bản cần dự đoán cảm xúc')
     parser.add_argument('--model', type=str, default='models/best_model.pt', help='Đường dẫn đến file mô hình đã huấn luyện')
     args = parser.parse_args()
-    
-    # Kiểm tra tham số
-    if not args.text and not args.file:
-        parser.error("Phải cung cấp --text hoặc --file")
     
     # Đọc từ điển cảm xúc
     print("Đang đọc từ điển cảm xúc...")
@@ -169,45 +225,19 @@ def main():
     # Tải trọng số mô hình đã huấn luyện
     print(f"Đang tải mô hình đã huấn luyện từ {args.model}...")
     model.load_state_dict(torch.load(args.model, map_location=device))
+    print("Mô hình đã được tải thành công!")
     
-    # Dự đoán cảm xúc
-    if args.text:
-        # Dự đoán cho văn bản từ tham số dòng lệnh
-        emotion, probs = predict_emotion(args.text, model, tokenizer, emotion_dict)
-        print(f"\nVăn bản: {args.text}")
-        print(f"Cảm xúc dự đoán: {emotion}")
-        print("\nXác suất cho mỗi cảm xúc:")
-        for emotion, prob in sorted(probs.items(), key=lambda x: x[1], reverse=True):
-            print(f"{emotion}: {prob:.4f}")
-    
-    elif args.file:
-        # Dự đoán cho văn bản từ file
-        try:
-            with open(args.file, 'r', encoding='utf-8') as f:
-                texts = f.readlines()
-            
-            print(f"\nĐã đọc {len(texts)} dòng từ file {args.file}")
-            
-            results = []
-            for i, text in enumerate(texts):
-                text = text.strip()
-                if text:  # Bỏ qua dòng trống
-                    emotion, probs = predict_emotion(text, model, tokenizer, emotion_dict)
-                    results.append({
-                        'text': text,
-                        'emotion': emotion,
-                        'probabilities': probs
-                    })
-                    print(f"Dòng {i+1}: {emotion}")
-            
-            # Lưu kết quả vào file
-            output_file = args.file.rsplit('.', 1)[0] + '_predictions.csv'
-            df = pd.DataFrame(results)
-            df.to_csv(output_file, index=False)
-            print(f"\nĐã lưu kết quả dự đoán vào file {output_file}")
+    # Vòng lặp tương tác với người dùng
+    while True:
+        user_input = get_user_input()
         
-        except Exception as e:
-            print(f"Lỗi khi đọc file: {e}")
+        if user_input['type'] == 'exit':
+            print("Tạm biệt!")
+            break
+        elif user_input['type'] == 'text':
+            process_text(user_input['content'], model, tokenizer, emotion_dict)
+        elif user_input['type'] == 'file':
+            process_file(user_input['content'], model, tokenizer, emotion_dict)
 
 # Chạy chương trình
 if __name__ == "__main__":
